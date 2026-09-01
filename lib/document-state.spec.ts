@@ -184,6 +184,17 @@ describe("documentReducer / extraction/succeeded", () => {
       "line_items.0",
     ]);
   });
+
+  it("stores the extraction's page geometry alongside fields, for the highlight overlay to normalise against", () => {
+    const source = extraction();
+    const next = documentReducer(
+      { ...initialDocumentState, doc: loadedDoc() },
+      extractionSucceeded(source)
+    );
+
+    expect(next.pages).toEqual(source.pages);
+    expect(next.pages).toEqual([{ index: 0, width: 612, height: 792 }]);
+  });
 });
 
 /* ------------------------------------------------------------------ *
@@ -378,6 +389,15 @@ describe("documentReducer / state/reset", () => {
       activeFieldId: null,
     });
     expect(next).toEqual(initialDocumentState);
+  });
+
+  it("clears pages back to undefined, even though a ready state had them populated", () => {
+    const ready = readyState();
+    expect(ready.pages).toEqual([{ index: 0, width: 612, height: 792 }]);
+
+    const next = documentReducer(ready, stateReset());
+
+    expect(next.pages).toBeUndefined();
   });
 });
 

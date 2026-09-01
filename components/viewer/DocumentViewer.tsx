@@ -67,10 +67,10 @@ interface PageSize {
 /**
  * Everything an overlay drawn on top of the page needs to place itself.
  *
- * This is the seam for the highlight overlay in 013: boxes are positioned
- * inside the sheet, whose origin is the page origin, and multiplied by `scale`.
- * (013 also has to be able to *switch* pages, for a field found on page 2 —
- * that will mean lifting `page` / `onPageChange` out of this component.)
+ * This is the seam the highlight overlay (013) uses: boxes are positioned inside
+ * the sheet, whose origin is the page origin, and multiplied by `scale`. Because
+ * the frame is passed on every render, an overlay tracks zoom, `Fit` and window
+ * resizes without subscribing to any of them.
  */
 export interface PageFrame extends PageSize {
   /** The current render scale — multiply page coordinates by this. */
@@ -79,7 +79,26 @@ export interface PageFrame extends PageSize {
   page: number;
 }
 
+/**
+ * A page number, or a function from the current page to the next — the shape of
+ * a `setState` argument, and for the same reason: the arrows step relative to
+ * wherever the page is *now*, so two presses inside one React batch have to be
+ * two steps rather than the same step computed twice from a stale prop.
+ */
+export type PageUpdate = number | ((current: number) => number);
+
 export interface DocumentViewerProps {
+  /**
+   * The 1-based page to show, clamped here against the count this component
+   * discovers.
+   *
+   * Controlled from outside rather than owned here (013): a field found on page
+   * 2 has to be able to bring page 2 into view, so the visible page is shared
+   * state between the two review columns and belongs to the screen holding both.
+   */
+  page: number;
+  /** Called with the next 1-based page when the toolbar's arrows are used. */
+  onPageChange: (page: PageUpdate) => void;
   /**
    * Rendered inside the page sheet, above the page, in the sheet's coordinate
    * space. @see PageFrame
@@ -88,10 +107,14 @@ export interface DocumentViewerProps {
   className?: string;
 }
 
-export function DocumentViewer({ overlay, className }: DocumentViewerProps) {
+export function DocumentViewer({
+  page,
+  onPageChange,
+  overlay,
+  className,
+}: DocumentViewerProps) {
   const { doc } = useDocument();
 
-  const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [pageSize, setPageSize] = useState<PageSize | null>(null);
   /**
@@ -145,11 +168,13 @@ export function DocumentViewer({ overlay, className }: DocumentViewerProps) {
   const handleFit = useCallback(() => setManualScale(null), []);
 
   // A step rather than a destination, for the same batching reason, and clamped
-  // against the count we know rather than trusting the caller.
+  // here against the count we know rather than in the parent, which does not
+  // know it: the page is the parent's state but the page *count* is discovered
+  // by this component.
   const handlePageStep = useCallback(
     (direction: 1 | -1) =>
-      setPage((previous) => clampPage(previous + direction, totalPages)),
-    [totalPages],
+      onPageChange((current) => clampPage(current + direction, totalPages)),
+    [onPageChange, totalPages],
   );
 
   /**
@@ -189,6 +214,9 @@ export function DocumentViewer({ overlay, className }: DocumentViewerProps) {
   // nothing to show without one, so it says so in types too.
   if (!doc) return null;
 
+  // Clamped for display without being written back to the parent: the count is
+  // only known after the first page loads, so a `page` of 2 arriving before the
+  // document reports 3 pages must not be corrected to 1 and lost.
   const safePage = clampPage(page, totalPages);
   // Until the first page reports its size there is nothing to lay out. The
   // sheet is mounted (the canvas has to be in the DOM to render into) but held

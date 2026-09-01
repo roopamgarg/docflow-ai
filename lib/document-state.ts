@@ -22,7 +22,11 @@ import type {
   ExtractionProgressCallback,
   ExtractionProvider,
 } from "./extraction/provider";
-import type { ExtractedField, Extraction } from "./extraction/types";
+import type {
+  ExtractedField,
+  Extraction,
+  PageGeometry,
+} from "./extraction/types";
 
 /* ------------------------------------------------------------------ *
  * State shape
@@ -59,6 +63,21 @@ export interface DocumentState {
   doc: LoadedDocument | null;
   /** The review model. Empty until an extraction succeeds. */
   fields: ExtractedField[];
+  /**
+   * Per-page geometry of the extraction the `fields` came from, or `undefined`
+   * until one succeeds.
+   *
+   * Stored because a `bbox` is only meaningful against the page it was measured
+   * on: `BoundingBox` is documented as page pixels in the same space as
+   * `Page.width` / `Page.height`, and a scanned PDF is OCR'd at 2x, so its boxes
+   * are twice the size of the page the viewer draws. The highlight overlay
+   * divides through by these numbers; without them it would have to assume one
+   * scale factor and be wrong on that route. @see components/viewer/highlight-geometry
+   *
+   * Optional rather than an empty array, so "no extraction yet" and "an
+   * extraction with no pages" stay distinguishable.
+   */
+  pages?: readonly PageGeometry[];
   status: DocumentStatus;
   /** Set when the human approves the document as a whole — see `approveAll`. */
   docApproved: boolean;
@@ -83,6 +102,7 @@ export const INITIAL_EXTRACTION_STEP: ExtractionProgress = {
 export const initialDocumentState: DocumentState = {
   doc: null,
   fields: [],
+  pages: undefined,
   status: { phase: "idle" },
   docApproved: false,
   activeFieldId: null,
@@ -156,10 +176,11 @@ export function stateReset(): DocumentAction {
 /** A fresh run's status: working, with nothing extracted yet. */
 function startingRun(): Pick<
   DocumentState,
-  "fields" | "status" | "docApproved" | "activeFieldId"
+  "fields" | "pages" | "status" | "docApproved" | "activeFieldId"
 > {
   return {
     fields: [],
+    pages: undefined,
     status: { phase: "working", step: INITIAL_EXTRACTION_STEP },
     docApproved: false,
     activeFieldId: null,
@@ -212,6 +233,10 @@ export function documentReducer(
       return {
         ...state,
         fields: toFields(action.extraction),
+        // Kept alongside the fields, and only ever replaced with them: page
+        // geometry from one run against boxes from another would misplace every
+        // highlight.
+        pages: action.extraction.pages,
         status: { phase: "ready" },
         docApproved: false,
         activeFieldId: null,
@@ -225,6 +250,7 @@ export function documentReducer(
       return {
         ...state,
         fields: [],
+        pages: undefined,
         status: {
           phase: "error",
           code: action.code,
