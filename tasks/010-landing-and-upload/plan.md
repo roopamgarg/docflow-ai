@@ -14,7 +14,7 @@ Build the landing page and the upload dropzone that starts the whole flow, inclu
 - **Validation:** accept `application/pdf`, `image/png`, `image/jpeg`; reject over 10MB. Rejections render as an inline message below the zone — never a dialog — and must not navigate.
 - **Wiring:** a valid file calls `startExtraction(file)` from `useDocument()`.
 - **`Try Demo Invoice` button** rendered here but wired in 015, when the demo asset exists.
-- No unit tests — reason: presentational plus thin wiring; validation thresholds are enforced and tested in the provider (008). Covered manually per the acceptance criteria.
+- No unit tests for the presentational surfaces (landing layout, hero, how-it-works, the dropzone's DOM/drag behaviour) — reason: presentational plus thin wiring; validation thresholds are enforced and tested in the provider (008). Covered manually per the acceptance criteria. The one pure, DOM-free helper extracted from this ticket, `rejectUpload` (plus `HELPER_TEXT`/`MAX_FILE_MB`) in `components/upload/validate-upload.ts`, is unit-tested.
 
 ## Architecture notes
 View layer. Calls `startExtraction` and nothing else; no extraction imports, no rules, no direct provider access. Client-side validation here is a UX affordance — 008 re-validates as the real gate.
@@ -30,7 +30,7 @@ View layer. Calls `startExtraction` and nothing else; no extraction imports, no 
 - [ ] Drag-and-drop and `Choose File` both accept a file; the drag-over state is visible
 - [ ] A `.txt` file and an oversize file are both rejected with an inline message and no navigation
 - [ ] A valid file calls `startExtraction` and the page moves to the processing state
-- [ ] No unit tests — Notes exception recorded (presentational; validation covered in 008)
+- [ ] No unit tests for the presentational surfaces — Notes exception recorded; `rejectUpload`/`HELPER_TEXT`/`MAX_FILE_MB` are unit-tested (`components/upload/validate-upload.spec.ts`)
 
 ## Key files
 - `app/page.tsx`
