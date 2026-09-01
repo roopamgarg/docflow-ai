@@ -16,6 +16,9 @@
  * find the button. Below `lg` the column is not height-bounded, so it simply
  * grows and the footer sits at the end of it.
  *
+ * The keyboard hint sits under the heading and outside the scroll area, so it
+ * is the first thing read and stays on screen while the list moves.
+ *
  * Holds no state. Every value comes from `useDocument()` and every mutation
  * goes back through it.
  */
@@ -35,7 +38,7 @@ export function ExtractionPanel({ className }: { className?: string }) {
       aria-label="Extracted data"
       className={cn("flex min-h-0 min-w-0 flex-col", className)}
     >
-      <div className="flex shrink-0 items-baseline justify-between gap-3 pb-3">
+      <div className="flex shrink-0 items-baseline justify-between gap-3 pb-1">
         <h2 className="text-subtitle font-semibold text-foreground">
           Extracted data
         </h2>
@@ -43,6 +46,18 @@ export function ExtractionPanel({ className }: { className?: string }) {
           {fields.length} {fields.length === 1 ? "field" : "fields"}
         </span>
       </div>
+
+      {/*
+        One line, once, at the top — not a per-card affordance. A reviewer needs
+        to be told the shortcuts exist exactly once, and repeating them on every
+        card would compete with the values they are there to read. Muted, so it
+        recedes after the first document.
+      */}
+      <p className="shrink-0 pb-3 text-label text-muted-foreground">
+        <kbd className="font-sans font-semibold">E</kbd> edit{" "}
+        <span aria-hidden>·</span>{" "}
+        <kbd className="font-sans font-semibold">A</kbd> approve
+      </p>
 
       {/*
         `-mx-1 px-1`: the active card's accent ring sits outside its border box,

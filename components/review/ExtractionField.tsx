@@ -29,14 +29,33 @@
  *
  * Hovering or focusing the card sets `activeFieldId`, which is the only link
  * between the two review columns — 013's overlay draws whatever this points at.
+ *
+ * 017 makes the card itself a tab stop, which is what turns tabbing down the
+ * panel into a guided tour of the document. Two choices in that are deliberate:
+ *
+ * - **The card stays a `<li>` with no interactive role.** It is a focusable
+ *   list item, not a `role="button"` — an element with an interactive role that
+ *   contains focusable buttons is the nested-interactive problem, and re-roling
+ *   the `<li>` to `group` would also break the `<ul>`'s list semantics. A
+ *   focusable `listitem` carrying `aria-label` announces "<label>, <value>" on
+ *   focus, keeps `Edit` and `Approve` as their own ordinary tab stops after it,
+ *   and leaves the tab order exactly the reading order.
+ * - **Shortcuts are suppressed by the event target, not by the edit flag**, in
+ *   the pure rules in `./field-shortcuts`. An empty field has its input mounted
+ *   with no edit started, so a flag would let `a` toggle approval mid-word
+ *   there.
  */
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState, type KeyboardEvent } from "react";
 import { PenLine } from "lucide-react";
 
 import { ApprovalButton } from "@/components/review/ApprovalButton";
 import { ConfidenceBar } from "@/components/review/ConfidenceBar";
 import { confidenceTone } from "@/components/review/field-display";
+import {
+  editorActionFor,
+  fieldShortcutFor,
+} from "@/components/review/field-shortcuts";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -62,6 +81,8 @@ export function ExtractionField({ field }: ExtractionFieldProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   /** Set when an edit starts before the input exists, so its mount can focus. */
   const pendingFocusRef = useRef(false);
+  /** The card, so an edit that ends can hand focus back to it. */
+  const cardRef = useRef<HTMLLIElement | null>(null);
 
   const tier = tierFor(field.confidence);
   const tone = confidenceTone(tier);
@@ -101,17 +122,31 @@ export function ExtractionField({ field }: ExtractionFieldProps) {
     }
   };
 
+  /**
+   * Returns focus to the card once an edit is over.
+   *
+   * Not a nicety: saving a filled field unmounts the input the human was typing
+   * in, and focus would fall to `<body>`, sending the next Tab back to the top
+   * of the page. Landing on the card instead leaves them one keystroke from
+   * `a` and one Tab from the next field.
+   */
+  const focusCard = () => {
+    cardRef.current?.focus();
+  };
+
   const save = () => {
     const next = (draft ?? "").trim();
     // An edit that changed nothing is not an update: dispatching it anyway
     // would stamp `Updated` on a field the human only looked at.
     if (next !== field.value) updateField(field.id, next);
     setDraft(null);
+    focusCard();
   };
 
   /** Leaves the stored value untouched by construction — only the draft goes. */
   const cancel = () => {
     setDraft(null);
+    focusCard();
   };
 
   const activate = () => {
@@ -122,10 +157,62 @@ export function ExtractionField({ field }: ExtractionFieldProps) {
     if (active) setActiveField(null);
   };
 
+  /**
+   * The card's keyboard grammar. Both branches are decided by the pure rules in
+   * `./field-shortcuts`; this only carries them out.
+   *
+   * `preventDefault` on a shortcut is required, not tidiness: `e` starts an
+   * edit and focuses the input *synchronously*, so the browser would then
+   * deliver that same keystroke as a character into the input the handler just
+   * focused, and the field would begin with a stray `e`.
+   */
+  const handleKeyDown = (event: KeyboardEvent<HTMLLIElement>) => {
+    // Named fields rather than the event itself: the rules are pure and take a
+    // plain shape, and spelling out what they read keeps them that way.
+    const keystroke = {
+      key: event.key,
+      ctrlKey: event.ctrlKey,
+      metaKey: event.metaKey,
+      altKey: event.altKey,
+      target: event.target as HTMLElement | null,
+    };
+
+    if (editing) {
+      const action = editorActionFor(keystroke);
+      if (action !== null) {
+        event.preventDefault();
+        if (action === "save") save();
+        else cancel();
+        return;
+      }
+    }
+
+    const shortcut = fieldShortcutFor(keystroke);
+    if (shortcut === null) return;
+    event.preventDefault();
+    if (shortcut === "edit") startEditing();
+    else toggleApproval(field.id);
+  };
+
   return (
     <li
+      ref={cardRef}
       data-field-id={field.id}
       data-tier={tier}
+      /*
+        A tab stop, so the panel can be walked without a mouse — and because
+        `onFocus` below sets the active field, that walk drives the document
+        highlight. No interactive role: see the note at the top of the file.
+      */
+      tabIndex={0}
+      /*
+        What a screen reader hears on landing here. Built from the two facts a
+        reviewer needs before deciding — which field, and what it currently says
+        — rather than left to the card's whole subtree, which would read the
+        confidence, the reason and both button labels first.
+      */
+      aria-label={`${field.label}: ${empty ? "no value" : field.value}`}
+      onKeyDown={handleKeyDown}
       onMouseEnter={activate}
       onMouseLeave={(event) => {
         // Editing keeps the highlight: the human is typing into this card and
@@ -144,6 +231,12 @@ export function ExtractionField({ field }: ExtractionFieldProps) {
       }}
       className={cn(
         "rounded-card border border-border bg-card px-3.5 py-3 shadow-card transition-shadow",
+        // The keyboard's own ring: the same accent as the rest of the app's
+        // focus treatment (`--ring` is the orange accent), thicker and more
+        // opaque than the active-card ring below so a focused card is
+        // unmistakable even when both are on the same element. `outline-none`
+        // only removes the UA outline that this replaces.
+        "outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
         tone.card,
         // The pointer-side half of the link to the document: the card the
         // overlay is currently drawing is the one wearing the accent ring.
@@ -191,6 +284,11 @@ export function ExtractionField({ field }: ExtractionFieldProps) {
                   {notFound ? "Not found — please enter" : "Please enter a value"}
                 </p>
               ) : null}
+              {/*
+                `Enter` / `Escape` are not wired here: the card's `onKeyDown`
+                sees them bubble up, which is also what makes them work from
+                `Save` and `Cancel` while an edit is open.
+              */}
               <Input
                 ref={attachInput}
                 value={draft ?? ""}

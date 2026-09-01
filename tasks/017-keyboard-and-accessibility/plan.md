@@ -13,7 +13,7 @@ Make the review screen fast to operate without a mouse, which is what separates 
 - **Discoverability:** one muted hint line at the top of the panel — `E` edit · `A` approve.
 - **Announcements:** `aria-live="polite"` on the review-progress count so approvals are announced to screen readers.
 - **Labels:** every icon-only control (rail items, zoom, page navigation, approve) has an accessible name.
-- No unit tests — reason: keyboard and focus behaviour in the DOM; not meaningfully unit-testable without a browser harness that is out of scope. Verified by the manual keyboard-only pass in the acceptance criteria.
+- No unit tests for the DOM/keyboard behaviour in `ExtractionField`, `ExtractionPanel`, and `ReviewProgress` — reason: focus and keyboard behaviour in the DOM is not meaningfully unit-testable without a browser harness that is out of scope. Verified by the manual keyboard-only pass in the acceptance criteria. The keystroke decision logic extracted to `components/review/field-shortcuts.ts` is pure and is unit-tested.
 
 ## Architecture notes
 View layer only — key handling lives on the field card and dispatches existing `useDocument()` actions. No new state and no new business logic.
@@ -31,9 +31,10 @@ View layer only — key handling lives on the field card and dispatches existing
 - [ ] Typing `a` or `e` inside an input edits text and does not trigger a shortcut
 - [ ] The whole flow — reach a field, edit it, save, approve, approve document — is completable with no mouse
 - [ ] The progress count is announced politely on change; all icon-only controls have accessible names
-- [ ] No unit tests — Notes exception recorded (DOM focus/keyboard behaviour)
+- [ ] No unit tests for `ExtractionField`/`ExtractionPanel`/`ReviewProgress` — Notes exception recorded (DOM focus/keyboard behaviour); `field-shortcuts.ts` is unit-tested
 
 ## Key files
 - `components/review/ExtractionField.tsx`
 - `components/review/ExtractionPanel.tsx`
 - `components/review/ReviewProgress.tsx`
+- `components/review/field-shortcuts.ts`

@@ -42,7 +42,19 @@ export function ReviewProgress({ className }: { className?: string }) {
   return (
     <div className={cn("flex flex-col gap-2.5", className)}>
       <div className="flex flex-col gap-1.5">
-        <p className="text-label text-muted-foreground tabular-figures">
+        {/*
+          The one announcement on the review screen. Approving a field with `a`
+          changes nothing a screen-reader user is focused on — the count is
+          across the panel and the bar beside it is decorative — so the count
+          announces itself. `polite`, because it must wait for the button's own
+          "Approved" to finish rather than talk over it, and `atomic` so the
+          whole sentence is read instead of just the digit that changed.
+        */}
+        <p
+          aria-live="polite"
+          aria-atomic="true"
+          className="text-label text-muted-foreground tabular-figures"
+        >
           {reviewedSummary(approvedCount, total)}
         </p>
         <Progress
