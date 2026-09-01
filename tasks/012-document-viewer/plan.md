@@ -14,7 +14,7 @@ Build the left column of the review screen: the document as the visual centre of
 - **Fit:** measure the container and compute the page-width scale.
 - **`PdfCanvas`:** `'use client'`, loaded via `dynamic(..., { ssr: false })`. Load the document once with `getDocument`, report `numPages` up to the viewer, and re-render the current page to a canvas whenever page or scale changes — **cancelling any in-flight render task first**, or concurrent renders will corrupt the canvas. Worker at `/pdf.worker.min.mjs`. If DOM/SSR errors surface, switch to `pdfjs-dist/legacy/build/pdf.mjs`.
 - **Review layout:** two columns inside `AppShell` (viewer left, panel slot right); below `lg` they stack with the viewer first.
-- No unit tests — reason: canvas rendering and DOM measurement; not meaningfully unit-testable without a browser harness that is out of scope for this MVP. Covered manually per the acceptance criteria.
+- No unit tests for `DocumentViewer`, `PdfCanvas`, `ViewerToolbar` — reason: canvas rendering and DOM measurement; not meaningfully unit-testable without a browser harness that is out of scope for this MVP. Covered manually per the acceptance criteria. The pure scale/page math is extracted to `viewer-scale.ts` and is unit-tested (see acceptance criteria).
 
 ## Architecture notes
 View layer, with a documented exception: `PdfCanvas` imports `pdfjs-dist` for **rendering only**. Extraction must never happen here — that lives in 004. The viewer reads `doc` from context and knows nothing about fields.
@@ -32,9 +32,11 @@ View layer, with a documented exception: `PdfCanvas` imports `pdfjs-dist` for **
 - [ ] Single-page documents hide the page indicator and disable prev/next
 - [ ] Rapid zoom or page changes never leave a torn or blank canvas (in-flight renders are cancelled)
 - [ ] Columns stack below `lg` with the viewer first
-- [ ] No unit tests — Notes exception recorded (canvas/DOM rendering)
+- [ ] `viewer-scale.ts` covered by unit tests; canvas/DOM components (`DocumentViewer`, `PdfCanvas`, `ViewerToolbar`) carry a Notes exception
 
 ## Key files
 - `components/viewer/DocumentViewer.tsx`
 - `components/viewer/PdfCanvas.tsx`
+- `components/viewer/viewer-scale.ts`
+- `components/viewer/viewer-scale.spec.ts`
 - `app/review/page.tsx`
