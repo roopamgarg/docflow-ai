@@ -7,6 +7,12 @@
  * reads a document nor knows what a provider is. The file check it renders is a
  * UX affordance and lives in `./validate-upload`; the real gate is the
  * provider's own `validateFile`.
+ *
+ * `Try Demo Invoice` goes through that same one call. It fetches the shipped
+ * `demo-invoice.png`, wraps the bytes in a `File` and hands it over, so the
+ * demo is an ordinary image upload: the same OCR route, the same real
+ * confidences, the same highlights. No branch in state, no branch in the
+ * extraction service, nothing that knows a demo exists.
  */
 
 import { useCallback, useId, useRef, useState, type DragEvent } from "react";
@@ -18,12 +24,23 @@ import { useDocument } from "@/lib/document-context";
 import { SUPPORTED_MEDIA_TYPES } from "@/lib/extraction/providers/local";
 import { cn } from "@/lib/utils";
 
+/**
+ * The demo document, vendored into `public/` — a same-origin static asset, not
+ * a network call. Generated from `components/viewer/DemoInvoice.tsx`; the
+ * command that regenerates it is in `tasks/015-demo-invoice/status.md`.
+ */
+const DEMO_INVOICE_URL = "/demo-invoice.png";
+/** The filename the demo document reports. Shown on the processing card. */
+const DEMO_INVOICE_NAME = "demo-invoice.png";
+
 export function UploadDropzone({ className }: { className?: string }) {
   const { startExtraction } = useDocument();
   const inputRef = useRef<HTMLInputElement>(null);
   const inputId = useId();
   const [dragging, setDragging] = useState(false);
   const [rejection, setRejection] = useState<string | null>(null);
+  /** True while the demo asset is being read, so the click cannot double-fire. */
+  const [loadingDemo, setLoadingDemo] = useState(false);
 
   const accept = useCallback(
     (file: File | undefined) => {
@@ -37,6 +54,32 @@ export function UploadDropzone({ className }: { className?: string }) {
     },
     [startExtraction],
   );
+
+  const startDemo = useCallback(async () => {
+    setRejection(null);
+    setLoadingDemo(true);
+
+    let file: File;
+    try {
+      const response = await fetch(DEMO_INVOICE_URL);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      file = new File([await response.blob()], DEMO_INVOICE_NAME, {
+        type: "image/png",
+      });
+    } catch {
+      // The asset is part of the build, so this is a broken deploy rather than
+      // anything the human did — reported inline all the same, next to the
+      // control they pressed, and the dropzone above still works.
+      setRejection("The demo invoice could not be loaded. Choose a file instead.");
+      setLoadingDemo(false);
+      return;
+    }
+
+    // From here the demo is indistinguishable from a drop: the same entry point,
+    // and the same card replacing this one while it runs.
+    setLoadingDemo(false);
+    await startExtraction(file);
+  }, [startExtraction]);
 
   const handleDrop = (event: DragEvent<HTMLLabelElement>) => {
     event.preventDefault();
@@ -149,12 +192,13 @@ export function UploadDropzone({ className }: { className?: string }) {
         </p>
       )}
 
-      {/*
-        TODO(015): wire this to the demo asset once `public/demo-invoice.png`
-        exists — it fetches the image, wraps it in a `File` and calls the same
-        `startExtraction`. Inert until then rather than promising a dead click.
-      */}
-      <Button variant="outline" size="lg" disabled>
+      <Button
+        type="button"
+        variant="outline"
+        size="lg"
+        disabled={loadingDemo}
+        onClick={() => void startDemo()}
+      >
         Try Demo Invoice
       </Button>
     </div>

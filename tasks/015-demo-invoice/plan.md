@@ -27,10 +27,29 @@ View layer plus a build-time asset. The demo deliberately adds no code path to t
 - [ ] `DemoInvoice` renders an invoice matching the reference image's structure with real text throughout
 - [ ] `public/demo-invoice.png` exists and visibly matches the component
 - [ ] `Try Demo Invoice` runs the standard pipeline via `startExtraction` — no separate code path
-- [ ] Extraction of the demo yields `INV-2024-001`, `2024-10-26`, `TechSolutions Inc.`, `₹1,250.00` and `Consultation Services`
+- [ ] Extraction of the demo yields `INV-2024-001`, `2024-10-26`, `TechSolutions Inc.`, `Consultation Services`, and the total amount at the correct numeric value
+- [ ] The invoice sheet prints `₹1,250.00`; the extracted currency symbol is knowingly misread (see the currency decision below) and is NOT expected to equal `₹`
 - [ ] The demo goes through the OCR route and produces real, varying confidences with working highlights
 - [ ] `grep -rn "demo" lib/extraction` returns nothing — no special-casing leaked into the service
 - [ ] No unit tests — Notes exception recorded (static component + asset)
+
+## Currency decision (2026-09-01)
+
+`₹` (U+20B9) occurs **zero times** in the vendored `public/tesseract/eng.traineddata`, so tesseract
+cannot emit it under any circumstances. Measured readings of the glyph were `¥` (51%), `¥` (36%),
+`?` (0%), `g` (5%), or dropped entirely.
+
+Decision: **keep `₹` on the sheet and accept the misread.** The invoice prints `₹1,250.00`; extraction
+returns `¥ 1,250.00` at ~74% confidence. This was chosen deliberately over printing `Rs`, shipping a
+second traineddata, or switching to `$`:
+
+- It is the most honest demonstration of the product's actual thesis — a real, visible low-confidence
+  misread that the reviewer notices and corrects. The alternative options all hide the very behaviour
+  the app exists to showcase.
+- `parseAmount` in ticket 016 strips the symbol, so the exported `total_amount` is `1250` regardless.
+- The stated app currency stays `₹`, per the earlier decision to prefer it over the reference image's `$`.
+
+Do not "fix" this by switching the sheet to `$` or by loosening ticket 006's rules.
 
 ## Key files
 - `components/viewer/DemoInvoice.tsx`
