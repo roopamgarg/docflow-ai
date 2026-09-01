@@ -39,6 +39,7 @@ server, no cost, works offline. Two consequences shape the whole product:
 | 015 | [015-demo-invoice](./015-demo-invoice/) | `DemoInvoice` sheet + PNG asset, demo button through the real pipeline | 008, 010 |
 | 016 | [016-approval-success-and-export](./016-approval-success-and-export/) | Success screen, `toExportJson`, `parseAmount`, download | 009, 014 |
 | 017 | [017-keyboard-and-accessibility](./017-keyboard-and-accessibility/) | Focus rings, `e`/`a` shortcuts, focus-driven highlight, `aria-live` | 014 |
+| 018 | [018-accessibility-remediation](./018-accessibility-remediation/) | Fix WCAG contrast, keyboard-scrollable document well, landmarks, 390px overflow | — |
 
 ## Dependency graph
 
@@ -87,10 +88,45 @@ end-to-end demoable state, once 011, 012 and 014 are done.
 5. Confirm unit tests pass, or record a Notes exception where the ticket says none apply.
 6. Set state to `done`, record the completion date, and fill in **Handoff**.
 
-Currently eligible: **001-scaffold-and-tooling**.
+Currently eligible: **018-accessibility-remediation**. Tickets 001–017 are all `done` (drained 2026-09-01).
 
 ## Testing policy
 
 Per `.claude/rules/task-driven-workflow.md`, tickets carrying real logic have unit-test acceptance
-criteria: **003, 004, 006, 007, 008, 009, 016**. The remaining tickets are scaffold, CSS, or
-DOM/canvas-only and record an explicit Notes exception rather than skipping silently.
+criteria. In practice the drain found testable pure logic in more tickets than the original plan
+anticipated — several tickets that were scoped as "presentational, no tests" turned out to contain a
+pure helper worth locking down, and their exceptions were narrowed rather than left as blanket claims:
+
+| Ticket | Unit-tested module |
+|---|---|
+| 001 | `lib/utils.ts` (`cn`), copy-assets manifest |
+| 002 | `IconRail` `isActive` |
+| 003 | `confidence.ts`, `errors.ts`, `registry.ts`, dependency-free guard |
+| 004 | `pdf-text.ts` coordinate conversion |
+| 005 | `ocr.ts` block mapping, progress weighting, worker lifecycle |
+| 006 | `lines.ts`, `rules.ts` (all four matchers) |
+| 007 | `line-items.ts` |
+| 008 | `local/index.ts` route selection, `fields.ts` |
+| 009 | `document-state.ts` reducer, `runExtraction` |
+| 010 | `validate-upload.ts` |
+| 011 | `processing-steps.ts` |
+| 012 | `viewer-scale.ts` |
+| 013 | `highlight-geometry.ts` |
+| 014 | `field-display.ts` |
+| 015 | demo asset guard (component exception stands) |
+| 016 | `export.ts` |
+| 017 | `field-shortcuts.ts` |
+
+Suite total after the drain: **423 tests across 23 files**. React components, canvas rendering and
+DOM focus behaviour carry documented Notes exceptions and were verified in a real browser instead.
+
+## Known limitations (not defects to fix blindly)
+
+- **The rupee glyph cannot be OCR'd.** `₹` (U+20B9) is absent from the vendored `eng.traineddata`, so
+  the demo's total extracts as `¥ 1,250.00` at ~74%. Kept deliberately — see the currency decision in
+  `015-demo-invoice/plan.md`. `parseAmount` strips the symbol, so the export is `1250` either way.
+- **Text-layer bbox drift.** A value taken from part of a text run gets a bbox apportioned by character
+  offset, which assumes uniform glyph widths, so a highlight can sit ~8pt off in Helvetica. Whole-run
+  values are pixel-exact. Fixing it means proportional glyph metrics in `pdf-text.ts`; tracked as a
+  known issue, not scheduled.
+- **`rasterise.ts` is browser-only.** It throws `internal` under Node, so tests inject it.
