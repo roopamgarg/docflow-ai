@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 import { AppShell } from "@/components/layout/AppShell";
+import { ExtractionPanel } from "@/components/review/ExtractionPanel";
 import {
   DocumentViewer,
   type PageUpdate,
@@ -18,8 +19,8 @@ import { useDocument } from "@/lib/document-context";
  * the document is the orientation and the fields follow it, which is also the
  * DOM order, so nothing has to be reordered visually for that to be true.
  *
- * The extraction panel (014) fills in from the right-hand slot; it reads this
- * page's state through `useDocument()` rather than props.
+ * The extraction panel fills the right-hand column; it reads this page's state
+ * through `useDocument()` rather than props.
  *
  * Two things live here rather than in a component below:
  *
@@ -104,7 +105,7 @@ export default function ReviewPage() {
           with the page it holds: the document scrolls inside its own well, so
           the toolbar stays put and zooming to 400% does not turn the whole
           screen into a scroll area. That height also sets the grid row, which
-          is what the panel beside it (014) will scroll inside.
+          is what the panel beside it scrolls inside.
         */}
         {/*
           Keyed by the document: a different file is a different page count,
@@ -121,19 +122,13 @@ export default function ReviewPage() {
           className="h-100 lg:h-[70svh]"
         />
 
-        {/* Placeholder slot for the extraction panel (014). */}
-        <aside
-          aria-label="Extracted data"
-          className="flex min-h-0 min-w-0 flex-col rounded-card bg-card p-5 shadow-card"
-        >
-          <h2 className="text-subtitle font-semibold text-foreground">
-            Extracted data
-          </h2>
-          <p className="mt-2 text-body text-muted-foreground">
-            The field cards, inline editing and approval controls arrive with
-            ticket 014.
-          </p>
-        </aside>
+        {/*
+          The same height as the viewer beside it, so the two columns line up
+          and the panel's footer is pinned inside that box rather than at the
+          end of however many line items the document has. Below `lg` the
+          columns stack and the panel grows with its content.
+        */}
+        <ExtractionPanel className="lg:h-[70svh]" />
       </div>
     </AppShell>
   );

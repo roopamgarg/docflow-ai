@@ -17,7 +17,7 @@ Build the right column — the heart of the product. Each extracted field is a c
 - **`ConfidenceBar`:** rounded percentage plus a 4px full-radius bar on the track, styled by `tierFor` from 003 — this component must not re-derive tiers.
 - **`ApprovalButton`:** `Approve` toggling to `Approved`.
 - **`ReviewProgress`:** `{approvedCount} of {fields.length} fields reviewed`, a bar, and `Approve Document` as the panel's primary action throughout. With fields still unapproved it approves the rest via `approveAll`, then sets `docApproved` and navigates to `/success`.
-- No unit tests — reason: presentational components over context state; tier logic (003), field mapping (008) and state semantics (009) are unit-tested at their source. Covered manually per the acceptance criteria.
+- No unit tests for the five React components (`ExtractionPanel`, `ExtractionField`, `ConfidenceBar`, `ApprovalButton`, `ReviewProgress`) — reason: presentational components over context state; tier logic (003), field mapping (008) and state semantics (009) are unit-tested at their source. Covered manually per the acceptance criteria. The pure display helpers extracted to `components/review/field-display.ts` (`confidencePercent`, `confidenceTone`/`CONFIDENCE_TONES`, `isLineItemField`/`groupReviewFields`, `reviewedSummary`, `reviewedPercent`) are unit-tested in `components/review/field-display.spec.ts`.
 
 ## Architecture notes
 View layer. All mutations go through `useDocument()` actions; the panel derives nothing and stores nothing. Confidence tiers come from `lib/extraction/confidence.ts` so the bar and the card treatment cannot diverge.
@@ -36,7 +36,7 @@ View layer. All mutations go through `useDocument()` actions; the panel derives 
 - [ ] A not-found field shows the 0% `Not found — please enter` state with an empty input
 - [ ] The counter tracks approvals accurately; `Approve Document` approves the remainder and navigates to `/success`
 - [ ] Focusing or hovering a card sets the active field (highlight driven by 013)
-- [ ] No unit tests — Notes exception recorded (presentational; logic tested in 003/008/009)
+- [ ] No unit tests for the five React components — Notes exception recorded (presentational; logic tested in 003/008/009); `components/review/field-display.ts` is unit-tested directly
 
 ## Key files
 - `components/review/ExtractionPanel.tsx`
