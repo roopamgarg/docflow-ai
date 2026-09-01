@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 
+import { DocumentProvider } from "@/lib/document-context";
+
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
@@ -17,7 +19,14 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${inter.variable} h-full antialiased`}>
-      <body className="flex min-h-full flex-col">{children}</body>
+      <body className="flex min-h-full flex-col">
+        {/*
+          One document, one provider, mounted above every route: the landing
+          page starts the extraction and the review and success screens read the
+          same state without any of it touching the URL or storage.
+        */}
+        <DocumentProvider>{children}</DocumentProvider>
+      </body>
     </html>
   );
 }
