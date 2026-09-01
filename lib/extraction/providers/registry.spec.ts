@@ -15,15 +15,14 @@ describe("DEFAULT_PROVIDER_ID", () => {
 });
 
 describe("getExtractionProvider", () => {
-  it("throws an internal ExtractionError for the default id, since the module registry is empty pre-008", () => {
-    expect(() => getExtractionProvider()).toThrow(ExtractionError);
-    try {
-      getExtractionProvider();
-      expect.unreachable("getExtractionProvider() should have thrown");
-    } catch (error) {
-      expect(isExtractionError(error)).toBe(true);
-      expect((error as ExtractionError).code).toBe("internal");
-    }
+  // Ticket 008 registered `local`, so the default id now resolves. The
+  // pre-008 assertion that it threw is replaced by its successor.
+  it("resolves the local provider for the default id", () => {
+    const provider = getExtractionProvider();
+
+    expect(provider.id).toBe("local");
+    expect(provider.label).toBe("On-device OCR");
+    expect(typeof provider.extract).toBe("function");
   });
 
   it("throws an internal ExtractionError for an unknown id", () => {
@@ -36,8 +35,8 @@ describe("getExtractionProvider", () => {
     }
   });
 
-  it("reports no registered ids yet", () => {
-    expect(listExtractionProviderIds()).toEqual([]);
+  it("reports local as a registered id", () => {
+    expect(listExtractionProviderIds()).toContain("local");
   });
 });
 

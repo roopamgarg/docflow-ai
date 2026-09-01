@@ -12,6 +12,7 @@ import type {
   ExtractionProvider,
   ExtractionProviderFactory,
 } from "../provider";
+import { createLocalProvider } from "./local";
 
 /** The provider used when a caller does not name one. */
 export const DEFAULT_PROVIDER_ID = "local";
@@ -19,12 +20,12 @@ export const DEFAULT_PROVIDER_ID = "local";
 /**
  * Registered factories by id.
  *
- * Intentionally empty for now: the contracts land before any engine does, and
- * `local` is registered by ticket 008. Until then every lookup is an unknown
- * id, which is the documented `internal` failure rather than a crash.
+ * `createLocalProvider` takes only optional test seams, so it satisfies
+ * `ExtractionProviderFactory` directly: a registry lookup builds the provider
+ * with the real sources, and a test that wants stubs constructs one itself.
  */
 const PROVIDERS: Record<string, ExtractionProviderFactory> = {
-  // local: createLocalProvider,  // ticket 008
+  local: createLocalProvider,
 };
 
 /**
@@ -58,7 +59,7 @@ export function getExtractionProvider(
   return resolveExtractionProvider(PROVIDERS, id);
 }
 
-/** Registered ids, for diagnostics and tests. Empty until ticket 008. */
+/** Registered ids, for diagnostics and tests. */
 export function listExtractionProviderIds(): string[] {
   return Object.keys(PROVIDERS);
 }
