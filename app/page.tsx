@@ -1,7 +1,7 @@
 import { FileUp, Gauge, PenLine, ShieldCheck } from "lucide-react";
 
 import { SiteHeader } from "@/components/layout/SiteHeader";
-import { UploadDropzone } from "@/components/upload/UploadDropzone";
+import { UploadPanel } from "@/components/upload/UploadPanel";
 
 /**
  * The landing route — the marketing surface.
@@ -11,9 +11,9 @@ import { UploadDropzone } from "@/components/upload/UploadDropzone";
  * `/success`, and keeping it off this page is what makes the review screen read
  * as a tool rather than a continuation of the pitch.
  *
- * A server component. The one interactive piece is `UploadDropzone`, which is
- * the client island that reaches the state layer through `useDocument()`; the
- * processing state that replaces it is ticket 011's.
+ * A server component. The one interactive piece is `UploadPanel`, the client
+ * island that reaches the state layer through `useDocument()` and swaps the
+ * upload card for the processing card in place once a document is loaded.
  */
 
 /** The pitch, in the order the human will actually experience it. */
@@ -68,7 +68,7 @@ export default function Home() {
           </div>
 
           <div className="mt-10 flex justify-center sm:mt-12">
-            <UploadDropzone />
+            <UploadPanel />
           </div>
         </section>
 

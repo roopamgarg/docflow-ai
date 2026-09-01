@@ -13,7 +13,7 @@ Show honest progress while extraction runs — four real steps driven by real ph
 - **Real progress, not theatre:** steps advance from the `ExtractionProgress` phases in context (`reading` → `ocr` → `matching`), and the bar shows the true ratio reported by the tesseract logger. No timers, no fake percentage, no step marked done before its work is.
 - **Error state:** on `status.phase === 'error'`, show the message plus `Try again` (calls `retry()`) and `Choose a different file` (calls `reset()`). Give `no_text_found` its own copy — `We couldn't find any readable text. Try a clearer scan.` — because it is the most likely real failure and a generic message would be useless.
 - **Completion:** when `status.phase === 'ready'`, navigate to `/review`.
-- No unit tests — reason: presentational, driven entirely by context state; the phase/ratio logic it renders is tested in 005 and 008. Covered manually per the acceptance criteria.
+- No unit tests for `ProcessingState.tsx` / `UploadPanel.tsx` — reason: presentational, driven entirely by context state; the phase/ratio logic they render is pulled out into `components/upload/processing-steps.ts` and unit tested there. Components covered manually per the acceptance criteria.
 
 ## Architecture notes
 View layer. Reads `status` from `useDocument()` and renders it. Contains no timing logic and no knowledge of OCR or pdf.js — if this component needs a `setTimeout` to look right, something upstream is wrong.
@@ -29,7 +29,7 @@ View layer. Reads `status` from `useDocument()` and renders it. Contains no timi
 - [ ] An extraction failure shows the message, `Try again` (which genuinely re-runs) and `Choose a different file`
 - [ ] `no_text_found` renders its specific copy rather than a generic error
 - [ ] Reaching `ready` navigates to `/review`
-- [ ] No unit tests — Notes exception recorded (presentational; phase logic covered in 005/008)
+- [ ] No unit tests for the React components — Notes exception recorded (presentational); `processing-steps.ts` pure logic is covered by unit tests
 
 ## Key files
 - `components/upload/ProcessingState.tsx`
