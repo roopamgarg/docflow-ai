@@ -40,6 +40,7 @@ server, no cost, works offline. Two consequences shape the whole product:
 | 016 | [016-approval-success-and-export](./016-approval-success-and-export/) | Success screen, `toExportJson`, `parseAmount`, download | 009, 014 |
 | 017 | [017-keyboard-and-accessibility](./017-keyboard-and-accessibility/) | Focus rings, `e`/`a` shortcuts, focus-driven highlight, `aria-live` | 014 |
 | 018 | [018-accessibility-remediation](./018-accessibility-remediation/) | Fix WCAG contrast, keyboard-scrollable document well, landmarks, 390px overflow | — |
+| 019 | [019-home-navigation-bounce](./019-home-navigation-bounce/) | `Home` in the icon rail bounced back to `/review`; make the ready → review hop a completion, not a guard | — |
 
 ## Dependency graph
 
@@ -88,7 +89,8 @@ end-to-end demoable state, once 011, 012 and 014 are done.
 5. Confirm unit tests pass, or record a Notes exception where the ticket says none apply.
 6. Set state to `done`, record the completion date, and fill in **Handoff**.
 
-Currently eligible: **018-accessibility-remediation**. Tickets 001–017 are all `done` (drained 2026-09-01).
+Currently eligible: **018-accessibility-remediation**. Tickets 001–017 are all `done` (drained 2026-09-01);
+019 is `done` (2026-09-01), taken out of order as a reported functional defect.
 
 ## Testing policy
 
@@ -116,8 +118,9 @@ pure helper worth locking down, and their exceptions were narrowed rather than l
 | 015 | demo asset guard (component exception stands) |
 | 016 | `export.ts` |
 | 017 | `field-shortcuts.ts` |
+| 019 | `upload-panel-view.ts` |
 
-Suite total after the drain: **423 tests across 23 files**. React components, canvas rendering and
+Suite total: **432 tests across 24 files** (423 across 23 after the drain, plus ticket 019). React components, canvas rendering and
 DOM focus behaviour carry documented Notes exceptions and were verified in a real browser instead.
 
 ## Known limitations (not defects to fix blindly)
