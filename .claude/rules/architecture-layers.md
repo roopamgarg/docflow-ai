@@ -1,66 +1,79 @@
----
-description: Layered architecture conventions (API MVC-inspired + worker handlers)
-alwaysApply: true
----
-
 # Architecture Layers
 
-This project is **not classic server-rendered MVC**. It uses a layered API + SPA + worker split. Preserve these boundaries in every ticket.
+DocFlow is a **single Next.js app (App Router) that runs entirely in the browser**. There is no API server, no database, and no job queue — document extraction happens client-side and nothing leaves the machine. Preserve these boundaries in every ticket.
 
 ## Mapping
 
 | Concern | Location | Responsibility |
 |---------|----------|----------------|
-| **View** | `apps/web` | UI only. Call API via HTTP. No Prisma, no Google/Meta SDKs, no business rules. |
-| **Controller** | `apps/api` `*.controller.ts` | HTTP only: parse/validate input, auth/CSRF guards, call a service, return DTO. No Google/Meta calls, no job scheduling, no Prisma queries beyond what a thin service needs. |
-| **Service** | `apps/api` `*.service.ts` | Business logic, orchestration, transactions. Controllers and workers call services. |
-| **Model / data** | Prisma schema + repositories (optional) | Persistence. Prefer services using Prisma client (or a small repository class). No HTTP types in model code. |
-| **Contracts** | `packages/shared` | Zod schemas + shared types. Used by web, api, and worker. |
-| **Jobs** | `apps/worker` `*.handler.ts` / cron | Thin entrypoints: parse job payload, call shared or api-local services, record results. No HTTP controllers. |
+| **View** | `app/`, `components/` | UI only. Render state, dispatch intent. No field rules, no confidence math, no extraction. |
+| **State** | `lib/document-context.tsx` | Client state: document, fields, status, edits, approvals, active field. React context + reducer — no domain logic. |
+| **Service (domain)** | `lib/extraction/providers/` | All extraction logic. Pure and deterministic wherever possible; side effects (workers, canvas) isolated at the edges. |
+| **Contracts** | `lib/extraction/types.ts`, `lib/extraction/provider.ts`, `lib/extraction/errors.ts` | Shared types, the provider interface, the error vocabulary. No UI or React types. |
+| **Mapping** | `lib/extraction/fields.ts`, `lib/export.ts` | Domain → display model, domain → export JSON. Pure functions. |
+| **Registry** | `lib/extraction/registry.ts` | The only module that knows provider ids and how to construct providers. |
+| **Controller / Jobs** | n/a | There is no server and no worker. Do not introduce route handlers or background queues without a ticket that says so. |
 
-## NestJS module layout (required)
-
-```
-apps/api/src/<feature>/
-  <feature>.module.ts
-  <feature>.controller.ts   # thin
-  <feature>.service.ts      # business logic
-  dto/                      # request/response DTOs (or Zod from @repo/shared)
-```
-
-Example: `events.controller.ts` → `events.service.ts` → Prisma / Google clients.
-
-## Worker layout (required)
+## App layout (required)
 
 ```
-apps/worker/src/<feature>/
-  <feature>.handler.ts      # BullMQ processor — thin
-  # Prefer importing domain services from a shared package or duplicating thin orchestration that calls the same Google/Meta clients
+app/                       # routes, layouts, pages — thin
+components/
+  ui/                      # shadcn primitives (button, card, input, badge, progress, separator, label)
+  <feature>.tsx            # presentational + container components
+lib/
+  document-context.tsx     # client state
+  export.ts                # domain → export JSON
+  utils.ts                 # cn() helper only
+  extraction/
+    types.ts               # domain types
+    provider.ts            # provider interface
+    errors.ts              # error vocabulary
+    fields.ts              # domain → display mapping
+    registry.ts            # provider ids → provider instances
+    providers/<name>.ts    # one provider per extraction strategy
+scripts/copy-assets.mjs    # vendors pdf.js / tesseract runtime assets into public/
 ```
 
-Handlers must not contain multi-step business logic inline; extract to a service class.
+Example: `components/upload-panel.tsx` → `lib/document-context.tsx` → `lib/extraction/registry.ts` → `lib/extraction/providers/*`.
 
 ## Hard rules
 
-- Controllers must not call Google Forms/Calendar/Gmail, Meta WhatsApp, or BullMQ directly — services do.
-- Controllers must not embed email/WhatsApp template rendering or quota logic.
-- Web components must not import `@prisma/client` or NestJS modules.
-- Webhooks use controllers that verify signatures then enqueue or call an ingestion service — no registration business logic in the controller.
-- Keep one feature = one NestJS module unless the master plan says otherwise.
+- **No network calls anywhere.** No `fetch`/`XMLHttpRequest` to a remote host, no analytics, no model APIs. Runtime assets are vendored into `public/` by `scripts/copy-assets.mjs`; this offline guarantee is a product requirement, not a preference.
+- `tesseract.js` must not be imported outside `lib/extraction/`. Components never touch OCR directly.
+- `pdfjs-dist` may be imported by a component **only for rendering** (`PdfCanvas`), never for extraction. Extraction-side PDF parsing lives in `lib/extraction/`.
+- Only `lib/extraction/registry.ts` knows provider ids. Components and state select a provider by id through the registry; they never `import` a provider module directly.
+- Components must not compute confidence, validate field shapes, or normalize extracted values — that is the domain layer's job. Components consume the display model from `lib/extraction/fields.ts`.
+- `lib/extraction/**` must not import from `app/`, `components/`, or `lib/document-context.tsx`. The domain layer knows nothing about React.
+- `canvas` and `encoding` stay aliased to `false` in `next.config.ts`. Never add the optional Node `canvas` package as a real dependency.
+- One extraction strategy = one file under `lib/extraction/providers/`, registered in `registry.ts`.
 
 ## Anti-patterns
 
 ```typescript
-// BAD — logic in controller
-@Post()
-async create(@Body() body) {
-  const form = await formsApi.create(...);
-  await prisma.event.create(...);
+// BAD — extraction logic in a component
+export function UploadPanel() {
+  const onFile = async (file: File) => {
+    const worker = await createWorker("eng");            // tesseract in the View layer
+    const { data } = await worker.recognize(file);
+    const invoiceNo = data.text.match(/INV-\d+/)?.[0];   // field rules in the View layer
+    setFields([{ key: "invoiceNumber", value: invoiceNo, confidence: 0.9 }]);
+  };
 }
 
-// GOOD — controller delegates
-@Post()
-create(@Body() body: CreateEventDto, @CurrentUser() user: User) {
-  return this.eventsService.create(user.id, body);
+// GOOD — component delegates to the domain layer through state
+export function UploadPanel() {
+  const { ingest } = useDocument();
+  const onFile = (file: File) => ingest(file);           // registry → provider → fields
 }
+```
+
+```typescript
+// BAD — component reaches past the registry, and phones home
+import { ocrProvider } from "@/lib/extraction/providers/ocr";
+await fetch("https://api.example.com/extract", { method: "POST", body: file });
+
+// GOOD
+import { getProvider } from "@/lib/extraction/registry";
+const provider = getProvider("ocr");
 ```
