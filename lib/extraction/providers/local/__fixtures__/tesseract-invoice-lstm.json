@@ -1,0 +1,337 @@
+{
+  "text": "Northwind Supply Co.\nInvoice #: INV-2026-0142\nDate: 2026-03-14\n\nTotal Due: $1,284.50\n",
+  "hocr": null,
+  "tsv": null,
+  "box": null,
+  "unlv": null,
+  "osd": null,
+  "pdf": null,
+  "imageColor": null,
+  "imageGrey": null,
+  "imageBinary": null,
+  "confidence": 94,
+  "blocks": [
+    {
+      "bbox": {
+        "x0": 40,
+        "y0": 44,
+        "x1": 366,
+        "y1": 274
+      },
+      "text": "Northwind Supply Co.\nInvoice #: INV-2026-0142\nDate: 2026-03-14\n\nTotal Due: $1,284.50\n",
+      "confidence": 95,
+      "blocktype": 1,
+      "paragraphs": [
+        {
+          "bbox": {
+            "x0": 41,
+            "y0": 44,
+            "x1": 366,
+            "y1": 197
+          },
+          "text": "Northwind Supply Co.\nInvoice #: INV-2026-0142\nDate: 2026-03-14\n\n",
+          "confidence": 94,
+          "is_ltr": 1,
+          "lines": [
+            {
+              "bbox": {
+                "x0": 42,
+                "y0": 44,
+                "x1": 366,
+                "y1": 78
+              },
+              "text": "Northwind Supply Co.\n",
+              "confidence": 95,
+              "rowAttributes": {
+                "rowHeight": 34,
+                "descenders": 7,
+                "ascenders": 7
+              },
+              "baseline": {
+                "x0": 42,
+                "y0": 71,
+                "x1": 366,
+                "y1": 71
+              },
+              "words": [
+                {
+                  "bbox": {
+                    "x0": 42,
+                    "y0": 45,
+                    "x1": 192,
+                    "y1": 71
+                  },
+                  "text": "Northwind",
+                  "confidence": 95,
+                  "choices": [
+                    {
+                      "text": "Northwind",
+                      "confidence": 95
+                    }
+                  ],
+                  "font_name": ""
+                },
+                {
+                  "bbox": {
+                    "x0": 204,
+                    "y0": 44,
+                    "x1": 306,
+                    "y1": 78
+                  },
+                  "text": "Supply",
+                  "confidence": 95,
+                  "choices": [
+                    {
+                      "text": "Supply",
+                      "confidence": 95
+                    }
+                  ],
+                  "font_name": ""
+                },
+                {
+                  "bbox": {
+                    "x0": 317,
+                    "y0": 44,
+                    "x1": 366,
+                    "y1": 71
+                  },
+                  "text": "Co.",
+                  "confidence": 96,
+                  "choices": [
+                    {
+                      "text": "Co.",
+                      "confidence": 96
+                    }
+                  ],
+                  "font_name": ""
+                }
+              ]
+            },
+            {
+              "bbox": {
+                "x0": 42,
+                "y0": 119,
+                "x1": 355,
+                "y1": 141
+              },
+              "text": "Invoice #: INV-2026-0142\n",
+              "confidence": 92,
+              "rowAttributes": {
+                "rowHeight": 25.827272,
+                "descenders": 4.8272724,
+                "ascenders": 5.590909
+              },
+              "baseline": {
+                "x0": 42,
+                "y0": 140,
+                "x1": 355,
+                "y1": 141
+              },
+              "words": [
+                {
+                  "bbox": {
+                    "x0": 42,
+                    "y0": 120,
+                    "x1": 128,
+                    "y1": 141
+                  },
+                  "text": "Invoice",
+                  "confidence": 93,
+                  "choices": [
+                    {
+                      "text": "Invoice",
+                      "confidence": 93
+                    }
+                  ],
+                  "font_name": ""
+                },
+                {
+                  "bbox": {
+                    "x0": 137,
+                    "y0": 120,
+                    "x1": 159,
+                    "y1": 140
+                  },
+                  "text": "#:",
+                  "confidence": 93,
+                  "choices": [
+                    {
+                      "text": "#:",
+                      "confidence": 93
+                    }
+                  ],
+                  "font_name": ""
+                },
+                {
+                  "bbox": {
+                    "x0": 170,
+                    "y0": 119,
+                    "x1": 355,
+                    "y1": 141
+                  },
+                  "text": "INV-2026-0142",
+                  "confidence": 92,
+                  "choices": [
+                    {
+                      "text": "INV-2026-0142",
+                      "confidence": 92
+                    }
+                  ],
+                  "font_name": ""
+                }
+              ]
+            },
+            {
+              "bbox": {
+                "x0": 41,
+                "y0": 175,
+                "x1": 257,
+                "y1": 197
+              },
+              "text": "Date: 2026-03-14\n\n",
+              "confidence": 94,
+              "rowAttributes": {
+                "rowHeight": 27.325665,
+                "descenders": 5.3256636,
+                "ascenders": 5
+              },
+              "baseline": {
+                "x0": 41,
+                "y0": 197,
+                "x1": 257,
+                "y1": 196
+              },
+              "words": [
+                {
+                  "bbox": {
+                    "x0": 41,
+                    "y0": 175,
+                    "x1": 106,
+                    "y1": 197
+                  },
+                  "text": "Date:",
+                  "confidence": 94,
+                  "choices": [
+                    {
+                      "text": "Date:",
+                      "confidence": 94
+                    }
+                  ],
+                  "font_name": ""
+                },
+                {
+                  "bbox": {
+                    "x0": 115,
+                    "y0": 176,
+                    "x1": 257,
+                    "y1": 197
+                  },
+                  "text": "2026-03-14",
+                  "confidence": 94,
+                  "choices": [
+                    {
+                      "text": "2026-03-14",
+                      "confidence": 94
+                    }
+                  ],
+                  "font_name": ""
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "bbox": {
+            "x0": 40,
+            "y0": 247,
+            "x1": 316,
+            "y1": 274
+          },
+          "text": "Total Due: $1,284.50\n",
+          "confidence": 96,
+          "is_ltr": 1,
+          "lines": [
+            {
+              "bbox": {
+                "x0": 40,
+                "y0": 247,
+                "x1": 316,
+                "y1": 274
+              },
+              "text": "Total Due: $1,284.50\n",
+              "confidence": 96,
+              "rowAttributes": {
+                "rowHeight": 29.638939,
+                "descenders": 5.638938,
+                "ascenders": 6
+              },
+              "baseline": {
+                "x0": 40,
+                "y0": 270,
+                "x1": 316,
+                "y1": 271
+              },
+              "words": [
+                {
+                  "bbox": {
+                    "x0": 40,
+                    "y0": 248,
+                    "x1": 102,
+                    "y1": 271
+                  },
+                  "text": "Total",
+                  "confidence": 96,
+                  "choices": [
+                    {
+                      "text": "Total",
+                      "confidence": 96
+                    }
+                  ],
+                  "font_name": ""
+                },
+                {
+                  "bbox": {
+                    "x0": 113,
+                    "y0": 248,
+                    "x1": 174,
+                    "y1": 271
+                  },
+                  "text": "Due:",
+                  "confidence": 96,
+                  "choices": [
+                    {
+                      "text": "Due:",
+                      "confidence": 96
+                    }
+                  ],
+                  "font_name": ""
+                },
+                {
+                  "bbox": {
+                    "x0": 184,
+                    "y0": 247,
+                    "x1": 316,
+                    "y1": 274
+                  },
+                  "text": "$1,284.50",
+                  "confidence": 96,
+                  "choices": [
+                    {
+                      "text": "$1,284.50",
+                      "confidence": 96
+                    }
+                  ],
+                  "font_name": ""
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "layoutBlocks": null,
+  "version": "5.1.0-288-g2a9c1",
+  "debug": null,
+  "rotateRadians": 0
+}
