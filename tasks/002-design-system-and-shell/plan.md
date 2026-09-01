@@ -13,7 +13,7 @@ Encode the reference image's visual language as CSS custom properties and build 
 - **`AppShell`:** cream page, one large rounded white card with `--shadow-shell`, slim left icon rail, top bar with `title` and `action` slots. Below `lg`, the rail collapses to icons along the top edge.
 - **`IconRail`:** logo mark, `Home` (→ `/`), `FileText` (→ `/review`). Active item is a solid orange rounded tile with a white icon; inactive icons use the muted token. Real links with accessible labels — **no inert decorative icons**.
 - **`SiteHeader`:** landing-only header — logo `DocFlow AI`, `How it works` anchor, primary `Upload Document`.
-- No unit tests — reason: CSS tokens and presentational chrome with no logic. Verified visually against the reference image.
+- Unit tests: the Notes exception applies to the presentational surfaces (`@theme` tokens, `AppShell`, `SiteHeader`, shadcn primitives) — no logic to test, verified visually against the reference image. `IconRail`'s `isActive(pathname, href)` helper is real branching logic and is now exported and covered by a colocated unit test (`components/layout/IconRail.spec.ts`).
 
 ## Architecture notes
 Pure View layer. No state, no data fetching, no extraction imports. `AppShell` takes `title` and `action` as props rather than reading route state, so pages own their own chrome content.
@@ -29,7 +29,7 @@ Pure View layer. No state, no data fetching, no extraction imports. `AppShell` t
 - [ ] `AppShell` renders the floating cream-on-card layout matching the reference image, with working `title` / `action` slots
 - [ ] `IconRail` shows exactly logo + Home + Document; the current route's tile is orange; every item is a real navigable link with an accessible name
 - [ ] Rail collapses to a top edge below `lg` without overflow at 768px
-- [ ] No unit tests — Notes exception recorded (presentational only)
+- [ ] Presentational surfaces carry the Notes unit-test exception; `IconRail`'s `isActive` helper is exported and covered by a unit test
 
 ## Key files
 - `app/globals.css`
